@@ -1,0 +1,29 @@
+# Node
+node_modules/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# Webpack cache
+.cache/
+webpack-stats.json
+
+# Java
+build/
+*.class
+
+# TeaVM output
+public/teavm.js
+
+# OS + Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Env and settings
+.env
