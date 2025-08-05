@@ -1,12 +1,17 @@
 package ai;
 
+import org.teavm.interop.*;
+import logic.Board;
+import logic.AIPlayer;
+
 public class ConnectAI {
-    public static int getMove(int[][] board) {
-        for (int col = 0; col < board[0].length; col++) {
-            for (int row = board.length - 1; row >= 0; row--) {
-                if (board[row][col] == 0) return col;
-            }
-        }
-        return 0; // fallback
+    @JSBody(params = { "board", "aiPiece", "depth", "mistake" }, script = "return ConnectAI_getMove(board, aiPiece, depth, mistake);")
+    public static native int getMove(String[][] board, String aiPiece, int depth, double mistake);
+
+    @JSExport
+    public static int ConnectAI_getMove(String[][] boardData, String aiPiece, int depth, double mistakeRate) {
+        Board board = new Board(boardData);
+        AIPlayer ai = new AIPlayer(aiPiece, depth, mistakeRate, "Phantom");
+        return ai.chooseMove(board);
     }
 }
