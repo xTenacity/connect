@@ -1,4 +1,4 @@
-package com.game.spring_boot;
+package com.game.fourfront;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

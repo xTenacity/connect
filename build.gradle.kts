@@ -6,7 +6,7 @@ plugins {
 
 group = "com.game"
 version = "0.0.1-SNAPSHOT"
-description = "Demo project for Spring Boot"
+description = "FourFront"
 
 java {
 	toolchain {

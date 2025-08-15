@@ -1,4 +1,4 @@
-package com.game.spring_boot;
+package com.game.fourfront;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -8,7 +8,8 @@ public class Application {
 
 	public static void main(String[] args) {
 		SpringApplication.run(Application.class, args);
-		System.out.println("Game application started successfully!");
+		System.out.println("Java backend started successfully!");
 	}
+	
 
 }
