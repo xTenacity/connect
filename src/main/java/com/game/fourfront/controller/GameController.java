@@ -11,7 +11,7 @@ import com.game.fourfront.model.MoveResult;
 
 @RestController
 @RequestMapping("/api/game")
-public class GameController {
+public class GameController {    
 
     @GetMapping("/state")
     public BoardState getGameState() {
@@ -25,3 +25,4 @@ public class GameController {
         return new MoveResult();
     }
 }
+    

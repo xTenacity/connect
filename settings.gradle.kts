@@ -1,1 +1,1 @@
-rootProject.name = "fourfront"
+rootProject.name = "connect"
