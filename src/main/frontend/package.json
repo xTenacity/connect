@@ -1,0 +1,16 @@
+{
+  "name": "connect-frontend",
+  "version": "1.0.0",
+  "description": "Phaser + TypeScript frontend for Connect game",
+  "main": "../resources/static/js/main.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w"
+  },
+  "dependencies": {
+    "phaser": "^3.60.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
