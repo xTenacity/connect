@@ -52,25 +52,50 @@ Database: JSON or SQLite (depending on deployment)
 Build Tools: Vite for frontend, Maven for backend
 
 ## Project Structure
-```
-/client
- ├── src/
- │    ├── core/           # Board logic, turns, AI
- │    ├── scenes/         # Menus, fights, story sequences
- │    ├── systems/        # Input, animation, UI
- │    ├── assets/         # Music, art, portraits
- │    └── data/           # Dialogue, boss configs
- ├── index.html
- ├── vite.config.ts
-/server
- ├── src/
- │    ├── main/java/
- │    │    ├── game/      # Controllers, endpoints
- │    │    ├── data/      # Save systems, stats
- │    │    └── ai/        # Backend AI logic
- ├── pom.xml
- └── application.properties
-README.md
+```.
+├── README.md
+├── build.gradle.kts
+├── gradle
+│   └── wrapper
+│       ├── gradle-wrapper.jar
+│       └── gradle-wrapper.properties
+├── gradlew
+├── gradlew.bat
+├── settings.gradle.kts
+└── src
+    ├── main
+    │   ├── frontend
+    │   │   ├── package.json
+    │   │   ├── src
+    │   │   │   └── main.ts
+    │   │   └── tsconfig.json
+    │   ├── java
+    │   │   └── com
+    │   │       └── game
+    │   │           └── fourfront
+    │   │               ├── Application.java
+    │   │               ├── HomeController.java
+    │   │               ├── controller
+    │   │               │   ├── AIController.java
+    │   │               │   └── GameController.java
+    │   │               ├── model
+    │   │               │   ├── AIPlayer.java
+    │   │               │   ├── Board.java
+    │   │               │   ├── BoardState.java
+    │   │               │   ├── Move.java
+    │   │               │   └── MoveResult.java
+    │   │               └── service
+    │   │                   └── GameService.java
+    │   └── resources
+    │       ├── application.properties
+    │       └── templates
+    │           └── home.html
+    └── test
+        └── java
+            └── com
+                └── game
+                    └── fourfront
+                        └── ApplicationTests.java
 ```
 
 # Art Direction
