@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Phaser + TypeScript frontend for Connect game",
   "main": "../resources/static/js/main.js",
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w"
