@@ -2,7 +2,7 @@
 export default class AIPlayer {
     constructor(aiPiece = 'O', depth = 4, mistakeRate = 0) {
         this.aiPiece = aiPiece;
-        this.playerPiece = aiPiece === 'X' ? 'O' : 'X';
+        this.playerPiece = (aiPiece === 'X' ? 'O' : 'X');
         this.depth = depth;
         this.mistakeRate = mistakeRate;
         this.rand = Math.random;

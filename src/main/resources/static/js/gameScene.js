@@ -1,5 +1,4 @@
 import AssetManager, { AVAILABLE_ACTS } from './assetManager.js';
-import AIPlayer from './ai.js';
 import { Board } from './board.js';
 const COLS = 7;
 const ROWS = 6;
@@ -11,7 +10,6 @@ export default class GameScene extends Phaser.Scene {
         super({ key: 'GameScene' });
         this.board = new Board(COLS, ROWS);
         this.assetManager = new AssetManager('act1');
-        this.ai = new AIPlayer('O', 4, 0);
         this.currentPlayer = 'X';
         this.hoveringPiece = null;
         this.targetX = 0;
@@ -84,11 +82,37 @@ export default class GameScene extends Phaser.Scene {
             this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
             if (this.currentPlayer === 'O') {
                 this.time.delayedCall(300, () => {
-                    const aiMove = this.ai.chooseMove(this.board);
-                    if (aiMove >= 0) {
-                        this.dropPieceAnimated(aiMove, 'O');
-                    }
-                    this.currentPlayer = 'X';
+                    // ask the Java backend for a move
+                    const payload = {
+                        board: this.board.board,
+                        aiPiece: 'O',
+                        aiDepth: 4,
+                        mistakeRate: 0.0,
+                        aiName: 'ServerAI'
+                    };
+                    console.log('Requesting AI move from server', payload);
+                    fetch('/api/ai/move', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    })
+                        .then((resp) => {
+                        if (!resp.ok)
+                            throw new Error('Bad status ' + resp.status);
+                        return resp.json();
+                    })
+                        .then((data) => {
+                        console.log('AI response', data);
+                        const aiMove = (data && typeof data.move === 'number') ? data.move : -1;
+                        if (aiMove >= 0) {
+                            this.dropPieceAnimated(aiMove, 'O');
+                        }
+                        else {
+                            console.warn('Invalid move from AI', data);
+                        }
+                    })
+                        .catch((err) => console.error('AI fetch error', err))
+                        .finally(() => { this.currentPlayer = 'X'; });
                 });
             }
         });
