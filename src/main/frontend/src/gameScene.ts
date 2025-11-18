@@ -34,17 +34,39 @@ export default class GameScene extends Phaser.Scene {
 
         // Attach loader event listeners for detailed logging
         this.load.on('fileprogress', (file: any, value: number) => {
-            console.log(`Loading progress: key=${file.key} type=${file.type} progress=${Math.round(value * 100)}% url=${file.url}`);
+            console.log(
+                `Loading progress: `,
+                `key=${file.key} `,
+                `type=${file.type} `,
+                `progress=${Math.round(value * 100)}% `,
+                `url=${file.url}`
+            );
         });
         this.load.on('filecomplete', (key: string, type: string, data: any) => {
-            console.log(`File complete: key=${key} type=${type}`);
+            console.log(
+                `File complete: `,
+                `key=${key} `,
+                `type=${type}`
+            );
         });
         this.load.on('loaderror', (file: any) => {
-            console.warn(`Load error: key=${file.key} type=${file.type} url=${file.url}`);
+            console.warn(`Load error: `,
+                `key=${file.key} `,
+                `type=${file.type} `,
+                `url=${file.url}`
+            );
         });
         this.load.on('complete', () => {
-            console.log('Loader complete. Total files loaded:', this.load.totalToLoad - this.load.totalFailed);
-            console.log('Loader summary -> totalToLoad=', this.load.totalToLoad, 'totalLoaded=', this.load.totalLoaded, 'totalFailed=', this.load.totalFailed);
+            console.log(
+                `Loader complete. Total files loaded: `,
+                this.load.totalToLoad - this.load.totalFailed
+            );
+            console.log(
+                'Loader summary -> ',
+                `totalToLoad=`, this.load.totalToLoad,
+                `totalLoaded=`, this.load.totalLoaded,
+                `totalFailed=`, this.load.totalFailed
+            );
         });
 
         this.assetManager.loadActAssets(this.load);
@@ -57,7 +79,10 @@ export default class GameScene extends Phaser.Scene {
         console.log('Placeholders created (if needed). Checking textures...');
 
         // check if sprite assets loaded
-        this.useSprites = !!this.textures.exists('piece-x') && !!this.textures.exists('piece-o');
+        this.useSprites = (
+            !!this.textures.exists('piece-x') && 
+            !!this.textures.exists('piece-o')
+        );
         console.log('useSprites =', this.useSprites);
 
         this.drawBoard();
@@ -70,7 +95,11 @@ export default class GameScene extends Phaser.Scene {
             const x = pointer.x - BOARD_OFFSET_X;
             const col = Math.floor(x / CELL_SIZE);
             const cx = BOARD_OFFSET_X + (col + 0.5) * CELL_SIZE;
-            this.targetX = Phaser.Math.Clamp(cx, BOARD_OFFSET_X + CELL_SIZE / 2, BOARD_OFFSET_X + (COLS - 0.5) * CELL_SIZE);
+            this.targetX = Phaser.Math.Clamp(
+                cx, 
+                BOARD_OFFSET_X + CELL_SIZE / 2, 
+                BOARD_OFFSET_X + (COLS - 0.5) * CELL_SIZE
+            );
             this.targetY = BOARD_OFFSET_Y - CELL_SIZE * 0.45; // above board
 
             if (!this.hoveringPiece) {
@@ -147,15 +176,24 @@ export default class GameScene extends Phaser.Scene {
     }
 
     drawBoard() {
-        const g = this.add.graphics();
-        g.fillStyle(0x1976d2, 1);
-        g.fillRect(BOARD_OFFSET_X, BOARD_OFFSET_Y, COLS * CELL_SIZE, ROWS * CELL_SIZE);
+        const gfx = this.add.graphics();
+        gfx.fillStyle(0x1976d2, 1);
+        gfx.fillRect(
+            BOARD_OFFSET_X, 
+            BOARD_OFFSET_Y, 
+            COLS * CELL_SIZE, 
+            ROWS * CELL_SIZE
+        );
         for (let row = 0; row < ROWS; row++) {
             for (let col = 0; col < COLS; col++) {
                 const cx = BOARD_OFFSET_X + col * CELL_SIZE + CELL_SIZE / 2;
                 const cy = BOARD_OFFSET_Y + row * CELL_SIZE + CELL_SIZE / 2;
-                g.fillStyle(0xe0e0e0, 1);
-                g.fillCircle(cx, cy, CELL_SIZE * 0.35);
+                gfx.fillStyle(0xe0e0e0, 1);
+                gfx.fillCircle(
+                    cx, 
+                    cy, 
+                    CELL_SIZE * 0.35
+                );
             }
         }
     }
@@ -193,11 +231,20 @@ export default class GameScene extends Phaser.Scene {
         let top: any;
         if (this.useSprites && this.textures.exists(pieceChar === 'X' ? 'piece-x' : 'piece-o')) {
             const key = pieceChar === 'X' ? 'piece-x' : 'piece-o';
-            top = this.add.image(this.targetX || cx, BOARD_OFFSET_Y - CELL_SIZE * 0.45, key).setDepth(20);
+            top = this.add.image(
+                this.targetX || cx, 
+                BOARD_OFFSET_Y - CELL_SIZE * 0.45, 
+                key
+            ).setDepth(20);
             top.setScale((CELL_SIZE * 0.7) / 64);
         } else {
             const color = pieceChar === 'X' ? 0xfdd835 : 0xd32f2f;
-            top = this.add.circle(this.targetX || cx, BOARD_OFFSET_Y - CELL_SIZE * 0.45, CELL_SIZE * 0.35, color).setDepth(20);
+            top = this.add.circle(
+                this.targetX || cx, 
+                BOARD_OFFSET_Y - CELL_SIZE * 0.45, 
+                CELL_SIZE * 0.35, 
+                color
+            ).setDepth(20);
             top.setStrokeStyle(4, 0x333333);
         }
 
