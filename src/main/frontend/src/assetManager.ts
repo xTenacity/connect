@@ -33,14 +33,22 @@ export default class AssetManager {
             { key: 'piece-x', type: 'image', url: this.getSpritePath('piece_x.png') },
             { key: 'piece-o', type: 'image', url: this.getSpritePath('piece_o.png') },
             { key: 'ui-sprite', type: 'image', url: this.getSharedPath('ui/ui.png') },
-            { key: 'act-music-1', type: 'audio', url: this.getMusicPath('beginner_luck.ogg') }
+            { key: 'act-music-1', type: 'audio', url: this.getMusicPath('beginnersluck.ogg') }
         ];
 
         for (const asset of assets) {
             try {
-                console.log(`Queuing asset -> key=${asset.key} type=${asset.type} url=${asset.url}`);
-                if (asset.type === 'image') loader.image(asset.key, asset.url);
-                else if (asset.type === 'audio') loader.audio(asset.key, asset.url);
+                console.log(
+                    'Queuing asset -> ',
+                    `key=${asset.key} `,
+                    `type=${asset.type} `,
+                    `url=${asset.url}`
+                );
+                if (asset.type === 'image') {
+                    loader.image(asset.key, asset.url);
+                } else if (asset.type === 'audio') {
+                    loader.audio(asset.key, asset.url);
+                }
             } catch (e) {
                 console.warn('Failed to queue asset', asset, e);
             }
