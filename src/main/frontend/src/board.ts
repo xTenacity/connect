@@ -4,79 +4,105 @@ export class Board {
     winCondition: number;
     board: string[][];
 
-    constructor(width = 7, height = 6, winCondition = 4) {
+    constructor(width: number = 7, height: number = 6, winCondition: number = 4) {
         this.width = width;
         this.height = height;
         this.winCondition = winCondition;
-        this.board = Array.from({ length: height }, () => Array(width).fill('_'));
+        this.board = Array.from({ length: height }, () =>
+            Array(width).fill('_')
+        );
     }
 
     clone(): Board {
-        const b = new Board(this.width, this.height, this.winCondition);
-        for (let r = 0; r < this.height; r++) b.board[r] = this.board[r].slice();
-        return b;
+        const newBoard = new Board(this.width, this.height, this.winCondition);
+        for (let r = 0; r < this.height; r++) newBoard.board[r] = this.board[r].slice();
+        return newBoard;
     }
 
-    isFull() {
-        for (let c = 0; c < this.width; c++) if (this.board[0][c] === '_') return false;
+    isFull(): boolean {
+        for (let col = 0; col < this.width; col++) {
+            if (this.board[0][col] === '_') {
+                return false;
+            }
+        }
         return true;
     }
 
-    getValidMoves() {
+    getValidMoves(): number[] {
         const res: number[] = [];
-        for (let c = 0; c < this.width; c++) if (this.board[0][c] === '_') res.push(c);
+        for (let col = 0; col < this.width; col++) {
+            if (this.board[0][col] === '_') {
+                res.push(col);
+            }
+        }
         return res;
     }
 
-    drop(col: number, piece: string) {
-        for (let r = this.height - 1; r >= 0; r--) {
-            if (this.board[r][col] === '_') {
-                this.board[r][col] = piece;
+    drop(col: number, piece: string): void {
+        for (let row = this.height - 1; row >= 0; row--) {
+            if (this.board[row][col] === '_') {
+                this.board[row][col] = piece;
                 break;
             }
         }
     }
 
-    getAt(row: number, col: number) {
+    getAt(row: number, col: number): string {
         return this.board[row][col];
     }
 
-    // simplified check that returns 'X' or 'O' or 'no winner'
+    // Returns 'X' or 'O' or 'no winner'
     checkWin(): string {
-        const b = this.board;
-        const h = this.height;
-        const w = this.width;
+        // Local aliases for readability
+        const board = this.board;
+        const rows = this.height;
+        const cols = this.width;
         const k = this.winCondition;
-        for (let r = 0; r < h; r++) {
-            for (let c = 0; c < w; c++) {
-                const p = b[r][c];
-                if (p === '_') continue;
-                // horiz
-                let ok = true;
-                for (let i = 0; i < k; i++) {
-                    if (c + i >= w || b[r][c + i] !== p) { ok = false; break; }
+
+        // check if piece is in bounds
+        const inBounds = (row: number, col: number) => {
+            return (
+                row >= 0 && //above bottom
+                row < rows && //below top
+                col >= 0 && //left of right
+                col < cols //right of left
+            );
+        };
+
+        // check for streak in a direction starting at (row, col)
+        function checkDirection(row: number, col: number, deltaRow: number, deltaCol: number): boolean {
+            const startPiece = board[row][col];
+            
+            if (startPiece === '_') return false; // empty cell can't form a win
+            for (let step = 1; step < k; step++) {
+                const newRow = row + deltaRow * step;
+                const newCol = col + deltaCol * step;
+                if (
+                    !inBounds(newRow, newCol) || //check if it's out of bounds
+                    board[newRow][newCol] !== startPiece //or if it's not the same as the starting piece
+                ) {
+                    return false;
                 }
-                if (ok) return p;
-                // vert
-                ok = true;
-                for (let i = 0; i < k; i++) {
-                    if (r + i >= h || b[r + i][c] !== p) { ok = false; break; }
+            }
+            return true;
+        }
+
+        // check for win
+        for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+                if (board[row][col] === '_') continue;
+                if (
+                    checkDirection(row, col, 0, 1) ||   // horizontal
+                    checkDirection(row, col, 1, 0) ||   // vertical
+                    checkDirection(row, col, 1, 1) ||   // diagonal down
+                    checkDirection(row, col, -1, 1)     // diagonal up
+) {
+                    return board[row][col]; // 'X' or 'O'
                 }
-                if (ok) return p;
-                // diag down-right
-                ok = true;
-                for (let i = 0; i < k; i++) {
-                    if (r + i >= h || c + i >= w || b[r + i][c + i] !== p) { ok = false; break; }
-                }
-                if (ok) return p;
-                // diag up-right
-                ok = true;
-                for (let i = 0; i < k; i++) {
-                    if (r - i < 0 || c + i >= w || b[r - i][c + i] !== p) { ok = false; break; }
-                }
-                if (ok) return p;
             }
         }
+
+        // no winner
         return 'no winner';
     }
 }

@@ -18,9 +18,9 @@ public class AIController {
         String aiName = (String) payload.getOrDefault("aiName", "AI");
 
         Board board = new Board();
-        for (int i = 0; i < boardArr.size(); i++) {
-            for (int j = 0; j < boardArr.get(i).size(); j++) {
-                board.getBoard()[i][j] = boardArr.get(i).get(j);
+        for (int row = 0; row < boardArr.size(); row++) {
+            for (int col = 0; col < boardArr.get(row).size(); col++) {
+                board.getBoard()[row][col] = boardArr.get(row).get(col);
             }
         }
 

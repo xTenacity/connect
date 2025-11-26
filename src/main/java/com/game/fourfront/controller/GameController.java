@@ -15,13 +15,11 @@ public class GameController {
 
     @GetMapping("/state")
     public BoardState getGameState() {
-        // return current board
         return new BoardState();
     }
 
     @PostMapping("/move")
     public MoveResult makeMove(@RequestBody Move move) {
-        // process move
         return new MoveResult();
     }
 }

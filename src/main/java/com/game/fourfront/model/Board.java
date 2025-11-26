@@ -71,35 +71,59 @@ public class Board {
         if (lastRow == -1 || lastCol == -1) return "no winner";
         String piece = board[lastRow][lastCol];
         if (piece.equals("_")) return "no winner";
-        int[][] directions = {{1,0},{0,1},{1,1},{1,-1}};
+        int[][] directions = {
+            {1,0}, // vertical
+            {0,1}, // horizontal
+            {1,1}, // diagonal \
+            {1,-1} // diagonal /
+        };
         for (int[] d : directions) {
             int count = 1;
-            count += countDirection(lastRow, lastCol, d[0], d[1], piece);
-            count += countDirection(lastRow, lastCol, -d[0], -d[1], piece);
+            count += countDirection(
+                lastRow, // starting row
+                lastCol, // starting col
+                d[0], // delta row
+                d[1], // delta col
+                piece
+            );
+            count += countDirection(
+                lastRow, // starting row
+                lastCol, // starting col
+                -d[0], // delta row
+                -d[1], // delta col
+                piece
+            );
             if (count >= winCondition) return piece;
         }
         return "no winner";
     }
 
-    private int countDirection(int row, int col, int dRow, int dCol, String piece) {
-        int count = 0;
-        for (int i = 1; i < winCondition; i++) {
-            int r = row + i * dRow;
-            int c = col + i * dCol;
-            if (r < 0 || r >= height || c < 0 || c >= width) break;
-            if (board[r][c].equals(piece)) count++;
+    private int countDirection(int startRow, int startCol, int deltaRow, int deltaCol, String targetPiece) {
+        int matchedCount = 0;
+        for (int step = 1; step < winCondition; step++) {
+            int currentRow = startRow + step * deltaRow;
+            int currentCol = startCol + step * deltaCol;
+            if ( // Out of bounds
+                currentRow < 0 || 
+                currentRow >= height || 
+                currentCol < 0 || 
+                currentCol >= width
+            ) break;
+            if (board[currentRow][currentCol].equals(targetPiece)) matchedCount++;
             else break;
         }
-        return count;
+        return matchedCount;
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
-                sb.append(board[i][j]);
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width; col++) {
+                sb.append("(").append(col).append("/").append(row).append(":").append(board[row][col]).append(")");
+                if (col < width - 1) sb.append(" ");
             }
+                if (row < height - 1) sb.append("\n");
         }
         return sb.toString();
     }
