@@ -1,14 +1,19 @@
 import GameScene from './gameScene.js';
 
-declare var Phaser: any;
+// Prefer 'game-container' (used by templates). Create it if missing.
+const CONTAINER_ID = 'game-container';
+let container = document.getElementById(CONTAINER_ID) as HTMLElement | null;
+if (!container) {
+    const div = document.createElement('div');
+    div.id = CONTAINER_ID;
+    div.style.width = '800px';
+    div.style.height = '600px';
+    document.body.appendChild(div);
+    container = div;
+}
 
-const config: any = {
-    type: Phaser.AUTO,
-    width: 7 * 80 + 80 * 2,
-    height: 6 * 80 + 60 * 2,
-    backgroundColor: '#222',
-    parent: 'phaser-game',
-    scene: [GameScene]
-};
-
-new Phaser.Game(config);
+if (container) {
+    new GameScene(container);
+} else {
+    console.error('No container for game scene');
+}

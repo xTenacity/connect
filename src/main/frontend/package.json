@@ -1,17 +1,18 @@
 {
   "name": "connect-frontend",
   "version": "1.0.0",
-  "description": "Phaser + TypeScript frontend for Connect game",
+  "description": "Three.js + TypeScript frontend for Connect game",
   "main": "../resources/static/js/main.js",
   "type": "module",
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc -w"
+    "dev": "vite",
+    "build": "vite build && node ./scripts/postbuild.cjs"
   },
   "dependencies": {
-    "phaser": "^3.60.0"
+    "three": "^0.158.0"
   },
   "devDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0"
   }
 }
