@@ -1,52 +1,55 @@
-export type ActName = 'act1' | 'act2' | 'act3';
+// Helper to always produce an absolute public path like '/models/props/o_piece.glb'
+function publicPath(...parts: string[]) {
+  const clean = parts.map(p => String(p || '').replace(/^\/+/g, '').replace(/\/+$/g, ''))
+                   .filter(Boolean)
+                   .join('/');
+  return '/' + clean;
+}
 
-const BASE = '/assets'; // served from src/main/resources/static/assets
-export const AVAILABLE_ACTS: ActName[] = ['act1', 'act2', 'act3'];
+// Note: we intentionally do not assume a fixed `/assets` prefix because the
+// production copy may place files at the static root (e.g. `/models/...`).
+// Use `publicPath()` to build absolute URLs that match what's served from
+// src/main/resources/static.
 
-// Map logical act names to actual folder names present in resources/static
-const ACT_FOLDER_MAP: Record<ActName, string> = {
-    act1: 'act_i',
-    act2: 'act_ii',
-    act3: 'act_iii'
-};
+export type AssetType = 'image' | 'audio' | 'material' | 'model' | 'shader' | 'texture' |  'json' | 'text' | 'gltf';
+export interface AssetDescriptor {
+  key: string;
+  type: AssetType;
+  url: string;
+}
 
 export default class AssetManager {
-    act: ActName;
-    constructor(act: ActName = 'act1') {
-        this.act = act;
-    }
 
-    setAct(act: ActName) {
-        this.act = act;
-    }
-
-    private folderForAct() {
-        return ACT_FOLDER_MAP[this.act] || this.act;
-    }
+    // No constructor required; keep default behavior. Older callers may pass an act string — it's ignored.
 
     getMusicPath(filename: string) {
-        return `${BASE}/${this.folderForAct()}/music/${filename}`;
-    }
-
-    getSpritePath(filename: string) {
-        return `${BASE}/${this.folderForAct()}/sprites/${filename}`;
+        return publicPath('audio', 'music', filename);
     }
 
     getModelPath(filename: string) {
-        return `${BASE}/${this.folderForAct()}/models/${filename}`;
-    }
-
-    getSharedPath(subpath: string) {
-        return `${BASE}/shared/${subpath}`;
+        return publicPath('models', filename);
     }
 
     // Return an array describing assets (key,type,url) — caller decides how to load
-    getAssetList() {
-        return [
-            // Skip GLTF models by default to avoid 404 when models folder/files are not present.
-            { key: 'piece-x', type: 'image', url: this.getSpritePath('piece_x.png') },
-            { key: 'piece-o', type: 'image', url: this.getSpritePath('piece_o.png') },
-            { key: 'act-music-1', type: 'audio', url: this.getMusicPath('beginnersluck.ogg') }
+    getAssetList(opts?: { includeModels?: boolean }): AssetDescriptor[] {
+        const includeModels = !!opts && !!opts.includeModels;
+
+        const assets: AssetDescriptor[] = [
+            // Project assets detected in src/main/frontend/assets
+            { key: 'player-json', type: 'json', url: publicPath('player.json') },
+            // music
+            { key: 'music-urout', type: 'audio', url: this.getMusicPath('urout.ogg') }
         ];
+        console.log("loaded player + music");
+        if (includeModels) {
+            // models are stored under assets/models/props
+            assets.push(
+                { key: 'piece-o', type: 'gltf', url: this.getModelPath('props/o_piece.glb') },
+                { key: 'piece-x', type: 'gltf', url: this.getModelPath('props/x_piece.glb') }
+            );
+            console.log("loaded 3d models");
+        }
+
+        return assets;
     }
 }

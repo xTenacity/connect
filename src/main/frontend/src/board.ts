@@ -9,7 +9,7 @@ export class Board {
         this.height = height;
         this.winCondition = winCondition;
         this.board = Array.from({ length: height }, () =>
-            Array(width).fill('_')
+            new Array(width).fill('_')
         );
     }
 
@@ -57,7 +57,7 @@ export class Board {
         const board = this.board;
         const rows = this.height;
         const cols = this.width;
-        const k = this.winCondition;
+        const winCon = this.winCondition;
 
         // check if piece is in bounds
         const inBounds = (row: number, col: number) => {
@@ -74,7 +74,7 @@ export class Board {
             const startPiece = board[row][col];
             
             if (startPiece === '_') return false; // empty cell can't form a win
-            for (let step = 1; step < k; step++) {
+            for (let step = 1; step < winCon; step++) {
                 const newRow = row + deltaRow * step;
                 const newCol = col + deltaCol * step;
                 if (
@@ -96,8 +96,8 @@ export class Board {
                     checkDirection(row, col, 1, 0) ||   // vertical
                     checkDirection(row, col, 1, 1) ||   // diagonal down
                     checkDirection(row, col, -1, 1)     // diagonal up
-) {
-                    return board[row][col]; // 'X' or 'O'
+                ) {
+                    return board[row][col];
                 }
             }
         }
