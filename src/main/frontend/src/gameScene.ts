@@ -82,7 +82,7 @@ export default class GameScene {
         const aspect = (container.clientWidth || 800) / (container.clientHeight || 600);
         this.camera = new THREE.PerspectiveCamera(fov, aspect, 0.1, 100);
 
-        // place the camera facing the  board
+        // place the camera facing the board
         this.camera.position.set(0, 1.2, 8.2);
         this.camera.lookAt(0, 0, 0);
 
@@ -151,7 +151,9 @@ export default class GameScene {
                         }, 0);
                 }
             }
-        } catch (e) { console.warn('Debug helper check failed', e); }
+        } catch (e) { 
+            console.warn('Debug helper check failed', e); 
+        }
     }
 
     // create and enable OrbitControls so the user can pan/rotate the camera
@@ -177,6 +179,7 @@ export default class GameScene {
             // limit distance you can zoom in/out
             controls.minDistance = 4.0;
             controls.maxDistance = 20.0;
+            // set camera target to world center
             controls.target.set(0, 0, 0);
             controls.update();
             (this as any)._controls = controls;
@@ -207,7 +210,7 @@ export default class GameScene {
     async init() {
         try {
             // request models as well so 3D piece glb files are loaded if present
-            await this.loadAssetsSimple({ includeModels: true });
+            await this.loadAssets({ includeModels: true });
         } catch (e) {
             console.warn('Asset load failed (continuing with placeholders)', e);
         }
@@ -217,29 +220,38 @@ export default class GameScene {
     }
 
     // Simplified asset loader: loads images into textures if possible, but never rejects
-    async loadAssetsSimple(opts?: { includeModels?: boolean }) {
+    async loadAssets(opts?: { includeModels?: boolean }) {
         const list = this.assetManager.getAssetList(opts);
         const texLoader = new THREE.TextureLoader();
         const gltfLoader = new GLTFLoader();
 
         const tasks: Promise<void>[] = [];
-        for (const a of list) {
-            if (a.type === 'image') {
-                const p = new Promise<void>((res) => {
+        for (const asset of list) {
+            if (asset.type === 'image') {
+                const loadTask = new Promise<void>((res) => {
                     texLoader.load(
-                        a.url,
-                        (tex: any) => { (this as any)[`tex_${a.key}`] = tex;
-                            try { tex.colorSpace = 'srgb'; } catch(e) {}
-                            try { tex.needsUpdate = true; } catch(e) {}
-                            res(); },
+                        asset.url,
+                        (tex: any) => { 
+                            (this as any)[`tex_${asset.key}`] = tex;
+                            try { 
+                                tex.colorSpace = 'srgb'; 
+                            } catch(e) {}
+                            try { 
+                                tex.needsUpdate = true; 
+                            } catch(e) {}
+                            res(); 
+                        },
                         undefined,
-                        () => { (this as any)[`tex_${a.key}`] = null; res(); }
+                        () => { 
+                            (this as any)[`tex_${asset.key}`] = null; 
+                            res(); 
+                        }
                     );
                 });
-                tasks.push(p);
-            } else if (a.type === 'gltf') {
-                const p = new Promise<void>((res) => {
-                    gltfLoader.load(a.url, (gltf: any) => {
+                tasks.push(loadTask);
+            } else if (asset.type === 'gltf') {
+                const loadTask = new Promise<void>((res) => {
+                    gltfLoader.load(asset.url, (gltf: any) => {
                         // ensure loaded models cast/receive shadows and are reasonably scaled
                         const scene = gltf.scene || gltf;
                         scene.traverse((n: any) => {
@@ -251,13 +263,16 @@ export default class GameScene {
                                 }
                             }
                         });
-                        (this as any)[`model_${a.key}`] = scene;
+                        (this as any)[`model_${asset.key}`] = scene;
                         res();
-                    }, undefined, () => { res(); });
+                    }, 
+                    undefined, 
+                    () => { 
+                        res(); 
+                    });
                 });
-                tasks.push(p);
+                tasks.push(loadTask);
             }
-            // audio / other types skipped for now (non-critical)
         }
         await Promise.all(tasks);
     }
@@ -265,7 +280,12 @@ export default class GameScene {
     buildBoardMesh() {
         // PlaneGeometry default is in X-Y plane (normal +Z) which is perfect for an upright board.
         const boardGeom = new THREE.PlaneGeometry(BOARD_WIDTH, BOARD_HEIGHT);
-        const boardMat = new THREE.MeshStandardMaterial({ color: 0x1976d2, roughness: 0.85, metalness: 0.02, side: (THREE as any).DoubleSide });
+        const boardMat = new THREE.MeshStandardMaterial({ 
+            color: 0x1976d2, 
+            roughness: 0.85, 
+            metalness: 0.02, 
+            side: (THREE as any).DoubleSide 
+        });
         const boardMesh = new THREE.Mesh(boardGeom, boardMat);
         // keep the plane upright (no rotation)
         boardMesh.position.set(0, 0, 0);
@@ -276,7 +296,11 @@ export default class GameScene {
 
         // cells now live in X (cols) and Y (rows) on the plane, with a small z offset so they appear in front
         const cellGeom = new THREE.CircleGeometry(CELL_SIZE * 0.35, 32);
-        const cellMat = new THREE.MeshStandardMaterial({ color: 0xe0e0e0, roughness: 0.6, metalness: 0.01 });
+        const cellMat = new THREE.MeshStandardMaterial({ 
+            color: 0xe0e0e0, 
+            roughness: 0.6, 
+            metalness: 0.01 
+        });
         for (let r = 0; r < ROWS; r++) {
             for (let c = 0; c < COLS; c++) {
                 const cx = (c - (COLS - 1) / 2) * CELL_SIZE;
@@ -378,8 +402,12 @@ export default class GameScene {
 
     updatePieces() {
         const toRemove: any[] = [];
-        this.scene.traverse((obj: any) => { if (obj?.userData?.isPiece) toRemove.push(obj); });
-        toRemove.forEach(o => { this.scene.remove(o); });
+        this.scene.traverse((obj: any) => { 
+            if (obj?.userData?.isPiece) toRemove.push(obj); 
+        });
+        toRemove.forEach(o => { 
+            this.scene.remove(o); 
+        });
 
         for (let r = 0; r < ROWS; r++) {
             for (let c = 0; c < COLS; c++) {
@@ -395,31 +423,38 @@ export default class GameScene {
                     const instance = model.clone(true);
                     const scale = CELL_SIZE * PIECE_SCALE;
                     instance.scale.set(scale, scale, scale);
+
                     // Rotate to lie flat on the upright board
                     instance.rotation.x = Math.PI / 2;
                     // determine bounding box to place model so its bottom sits on the board
                     const pieceColor = val === 'X' ? 0xfdd835 : 0xd32f2f;
-                     const bbox = new THREE.Box3().setFromObject(instance);
-                     const minZ = bbox.min.z ?? 0;
-                     // translate so minZ becomes small offset above board
-                     instance.position.set(cx, cy, -minZ + 0.06);
-                      // ensure meshes within the gltf instance cast/receive shadows
-                     instance.traverse((n: any) => {
-                         if (n.isMesh) {
-                             n.castShadow = true; n.receiveShadow = true;
-                             try { if (n.material && 'color' in n.material) { n.material.color.setHex(pieceColor); n.material.side = (THREE as any).DoubleSide; n.material.needsUpdate = true; } } catch(e) {}
-                         }
-                     });
-                      // add a simple blob shadow under the piece to create depth
-                      const shadowGeom = new THREE.CircleGeometry(CELL_SIZE * 0.45, 32);
-                      const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.35 });
-                      const shadowMesh = new THREE.Mesh(shadowGeom, shadowMat);
-                      shadowMesh.position.set(cx, cy, 0.055);
-                      shadowMesh.userData = { isPiece: true, isShadow: true };
-                      this.scene.add(shadowMesh);
-                      instance.userData = { isPiece: true };
-                      this.scene.add(instance);
-                      continue;
+                    const bbox = new THREE.Box3().setFromObject(instance);
+                    const minZ = bbox.min.z ?? 0;
+                    // translate so minZ becomes small offset above board
+                    instance.position.set(cx, cy, -minZ + 0.06);
+                    // ensure meshes within the gltf instance cast/receive shadows
+                    instance.traverse((n: any) => {
+                        if (n.isMesh) {
+                            n.castShadow = true; n.receiveShadow = true;
+                            try { 
+                                if (n.material && 'color' in n.material) { 
+                                    n.material.color.setHex(pieceColor); 
+                                    n.material.side = (THREE as any).DoubleSide; 
+                                    n.material.needsUpdate = true; 
+                                } 
+                            } catch(e) {}
+                        }
+                    });
+                    // add a simple blob shadow under the piece to create depth
+                    const shadowGeom = new THREE.CircleGeometry(CELL_SIZE * 0.45, 32);
+                    const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.35 });
+                    const shadowMesh = new THREE.Mesh(shadowGeom, shadowMat);
+                    shadowMesh.position.set(cx, cy, 0.055);
+                    shadowMesh.userData = { isPiece: true, isShadow: true };
+                    this.scene.add(shadowMesh);
+                    instance.userData = { isPiece: true };
+                    this.scene.add(instance);
+                    continue;
                 }
 
                 const texKey = `tex_piece-${val.toLowerCase()}`;
@@ -427,7 +462,13 @@ export default class GameScene {
                 if (tex) {
                     const planeGeom = new THREE.PlaneGeometry(CELL_SIZE * 0.7, CELL_SIZE * 0.7);
                     // use MeshStandardMaterial so the texture reacts to lighting/shadows
-                    const mat = new THREE.MeshStandardMaterial({ map: tex, transparent: true, metalness: 0.02, roughness: 0.65, side: (THREE as any).DoubleSide });
+                    const mat = new THREE.MeshStandardMaterial({ 
+                        map: tex, 
+                        transparent: true, 
+                        metalness: 0.02, 
+                        roughness: 0.65, 
+                        side: (THREE as any).DoubleSide 
+                    });
                     const m = new THREE.Mesh(planeGeom, mat);
                     // Ensure the textured plane faces the same way as the board (flip if the texture appears upside-down)
                     m.rotation.z = 0; // adjust to Math.PI if your textures appear inverted
@@ -435,29 +476,41 @@ export default class GameScene {
                     m.userData = { isPiece: true };
                     m.castShadow = false;
                     m.receiveShadow = true;
-                      // add a subtle shadow under the textured plane
-                      const shadowGeom = new THREE.CircleGeometry(CELL_SIZE * 0.45, 32);
-                      const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.25 });
-                      const shadowMesh = new THREE.Mesh(shadowGeom, shadowMat);
-                      shadowMesh.position.set(cx, cy - 0.01, 0.055);
-                      shadowMesh.userData = { isPiece: true, isShadow: true };
-                      this.scene.add(shadowMesh);
-                      this.scene.add(m);
-                  } else {
-                      const piece3d = this.createProceduralPiece(val as 'X'|'O');
-                      // position procedural piece so it sits on top of the board
-                      piece3d.position.set(cx, cy, 0.06);
-                     // color procedural piece explicitly
-                     try { (piece3d.material as any).color.setHex(val === 'X' ? 0xfdd835 : 0xd32f2f); } catch(e) {}
-                      // add a soft shadow under the procedural piece
-                      const shadowGeom = new THREE.CircleGeometry(CELL_SIZE * 0.45, 32);
-                      const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28 });
-                      const shadowMesh = new THREE.Mesh(shadowGeom, shadowMat);
-                      shadowMesh.position.set(cx, cy, 0.055);
-                      shadowMesh.userData = { isPiece: true, isShadow: true };
-                      this.scene.add(shadowMesh);
-                      this.scene.add(piece3d);
-                  }
+                        // add a subtle shadow under the textured plane
+                        const shadowGeom = new THREE.CircleGeometry(CELL_SIZE * 0.45, 32);
+                        const shadowMat = new THREE.MeshBasicMaterial({ 
+                        color: 0x000000, 
+                        transparent: true, 
+                        opacity: 0.25 
+                    });
+                    const shadowMesh = new THREE.Mesh(shadowGeom, shadowMat);
+                    shadowMesh.position.set(cx, cy - 0.01, 0.055);
+                    shadowMesh.userData = { isPiece: true, isShadow: true };
+                    this.scene.add(shadowMesh);
+                    this.scene.add(m);
+                } else {
+                    const piece3d = this.createProceduralPiece(val as 'X'|'O');
+                    // position procedural piece so it sits on top of the board
+                    piece3d.position.set(cx, cy, 0.06);
+                    // color procedural piece explicitly
+                    try { 
+                        (piece3d.material as any).color.setHex(
+                            val === 'X' ? 0xfdd835 : 0xd32f2f
+                        ); 
+                    } catch(e) {}
+                    // add a soft shadow under the procedural piece
+                    const shadowGeom = new THREE.CircleGeometry(CELL_SIZE * 0.45, 32);
+                    const shadowMat = new THREE.MeshBasicMaterial({ 
+                        color: 0x000000, 
+                        transparent: true, 
+                        opacity: 0.28 
+                    });
+                    const shadowMesh = new THREE.Mesh(shadowGeom, shadowMat);
+                    shadowMesh.position.set(cx, cy, 0.055);
+                    shadowMesh.userData = { isPiece: true, isShadow: true };
+                    this.scene.add(shadowMesh);
+                    this.scene.add(piece3d);
+                }
               }
           }
       }
@@ -465,8 +518,16 @@ export default class GameScene {
     // Helper to create a simple 3D piece when no GLTF model exists
     createProceduralPiece(val: 'X'|'O') {
         const color = val === 'X' ? 0xfdd835 : 0xd32f2f;
-        const geom = new THREE.CylinderGeometry(CELL_SIZE * 0.32 * PIECE_SCALE, CELL_SIZE * 0.32 * PIECE_SCALE, CELL_SIZE * 0.2 * PIECE_SCALE, 24);
-        const mat = new THREE.MeshStandardMaterial({ color, metalness: 0.15, roughness: 0.45 });
+        const geom = new THREE.CylinderGeometry(
+            CELL_SIZE * 0.32 * PIECE_SCALE, 
+            CELL_SIZE * 0.32 * PIECE_SCALE, 
+            CELL_SIZE * 0.2 * PIECE_SCALE, 24
+        );
+        const mat = new THREE.MeshStandardMaterial({ 
+            color, 
+            metalness: 0.15, 
+            roughness: 0.45 
+        });
         const mesh = new THREE.Mesh(geom, mat);
         // Rotate to lie flat on the upright board
         mesh.rotation.x = Math.PI / 2;
@@ -477,16 +538,30 @@ export default class GameScene {
     }
 
     async requestAIMove() {
-        const payload = { board: this.board.board, aiPiece: 'O', aiDepth: 4, mistakeRate: 0.1, aiName: 'ServerAI' };
+        const payload = { 
+            board: this.board.board, 
+            aiPiece: 'O', 
+            aiDepth: 4, 
+            mistakeRate: 0.1, 
+            aiName: 'ServerAI' 
+        };
         try {
-            const resp = await fetch('/api/ai/move', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const resp = await fetch('/api/ai/move', { 
+                method: 'POST', 
+                headers: { 
+                    'Content-Type': 'application/json' 
+                }, 
+                body: JSON.stringify(payload) 
+            });
             const data = await resp.json();
             if (data?.rankedMoves) this.showRankedMoveHints(data.rankedMoves);
             if (typeof data?.move === 'number' && data.move >= 0) {
                 this.board.drop(data.move, 'O');
                 this.updatePieces();
             }
-        } catch (e) { console.error('AI request failed', e); }
+        } catch (e) { 
+            console.error('AI request failed', e); 
+        }
         this.currentPlayer = 'X';
     }
 
@@ -494,16 +569,20 @@ export default class GameScene {
         this.rankedHints.forEach(h => this.scene.remove(h));
         this.rankedHints = [];
         for (let i = 0; i < Math.min(3, rankedMoves.length); i++) {
-            const rm = rankedMoves[i];
-            const col = rm.move;
+            const rankedMove = rankedMoves[i];
+            const col = rankedMove.move;
             const cx = (col - (COLS - 1) / 2) * CELL_SIZE;
             const geom = new THREE.CircleGeometry(CELL_SIZE * 0.28 * (1 - i*0.12), 32);
             const colors = [0xfdd835, 0xb0bec5, 0xffab91];
-            const mat = new THREE.MeshBasicMaterial({ color: colors[i], transparent: true, opacity: 0.85 - i*0.15 });
-            const m = new THREE.Mesh(geom, mat);
-            m.position.set(cx, (BOARD_HEIGHT / 2) + CELL_SIZE * 0.25, 0.05);
-            this.scene.add(m);
-            this.rankedHints.push(m);
+            const mat = new THREE.MeshBasicMaterial({ 
+                color: colors[i], 
+                transparent: true, 
+                opacity: 0.85 - i*0.15 
+            });
+            const rankedMesh = new THREE.Mesh(geom, mat);
+            rankedMesh.position.set(cx, (BOARD_HEIGHT / 2) + CELL_SIZE * 0.25, 0.05);
+            this.scene.add(rankedMesh);
+            this.rankedHints.push(rankedMesh);
         }
     }
 
