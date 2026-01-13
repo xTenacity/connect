@@ -1,69 +1,92 @@
 #!/usr/bin/env node
-const fs = require('fs');
-const fsp = fs.promises;
+const fileSystem = require('fs');
+const fileSystemPromises = fileSystem.promises;
 const path = require('path');
 
-async function rimrafDir(dir) {
-  if (!fs.existsSync(dir)) return;
-  const entries = await fsp.readdir(dir, { withFileTypes: true });
-  for (const entry of entries) {
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      await fsp.rm(full, { recursive: true, force: true });
-    } else {
-      await fsp.unlink(full);
+async function rimrafDirectory(directory) {
+    if (!fileSystem.existsSync(directory)) return;
+    const entries = await fileSystemPromises.readdir(
+        directory, {
+            withFileTypes: true
+        }
+    );
+    for (const entry of entries) {
+        const full = path.join(directory, entry.name);
+
+        if (entry.isDirectory()) {
+            await fileSystemPromises.rm(
+                full, {
+                    recursive: true,
+                    force: true
+                }
+            );
+        } else {
+            await fileSystemPromises.unlink(full);
+        }
     }
-  }
 }
 
-async function copyDir(src, dst) {
-  await fsp.mkdir(dst, { recursive: true });
-  const entries = await fsp.readdir(src, { withFileTypes: true });
-  for (const entry of entries) {
-    const s = path.join(src, entry.name);
-    const d = path.join(dst, entry.name);
-    if (entry.isDirectory()) {
-      await copyDir(s, d);
-    } else {
-      await fsp.copyFile(s, d);
+async function copyDirectory(source, distribution) {
+    await fileSystemPromises.mkdir(distribution, {
+        recursive: true
+    });
+    const entries = await fileSystemPromises.readdir(
+        source, {
+            withFileTypes: true
+        }
+    );
+    for (const entry of entries) {
+        const sourcePath = path.join(source, entry.name);
+        const distributionPath = path.join(distribution, entry.name);
+        if (entry.isDirectory()) {
+          await copyDirectory(sourcePath, distributionPath);
+        } else {
+          await fileSystemPromises.copyFile(sourcePath, distributionPath);
+        }
     }
-  }
 }
 
 (async () => {
-  const scriptsDir = __dirname; // .../src/main/frontend/scripts
-  const frontendDir = path.resolve(scriptsDir, '..'); // .../src/main/frontend
-  const distDir = path.join(frontendDir, 'dist');
-  const destDir = path.join(frontendDir, '..', 'resources', 'static'); // .../src/main/resources/static
+    const scriptsDirectory = __dirname; // .../src/main/frontend/scripts
+    const frontendDirectory = path.resolve(scriptsDirectory, '..'); // .../src/main/frontend
+    const distributionDirectory = path.join(frontendDirectory, 'dist');
+    const destinationDirectory = path.join(frontendDirectory, '..', 'resources', 'static'); // .../src/main/resources/static
+    try {
+        if (!fileSystem.existsSync(distributionDirectory)) {
+            console.error('Postbuild: dist folder not found at', distributionDirectory);
+            process.exit(1);
+        }
 
-  try {
-    if (!fs.existsSync(distDir)) {
-      console.error('postbuild: dist folder not found at', distDir);
-      process.exit(1);
+        await fileSystemPromises.mkdir(
+            destinationDirectory, {
+                recursive: true 
+            }
+        );
+        await rimrafDirectory(destinationDirectory);
+        await copyDirectory(distributionDirectory, destinationDirectory);
+
+        // Also copy dist/models into dest/assets/models so files are available both at
+        // `/models/...` and `/assets/models/...` (some runtime bundles request the latter).
+        const distModels = path.join(distributionDirectory, 'models');
+        const destAssetsModels = path.join(destinationDirectory, 'assets', 'models');
+        if (fileSystem.existsSync(distModels)) {
+
+            await fileSystemPromises.mkdir(
+                path.join(destinationDirectory, 'assets'), {
+                    recursive: true
+                }
+            );
+
+            await copyDirectory(
+                distModels,
+                destAssetsModels
+            );
+        }
+
+        console.log('Postbuild: copied', distributionDirectory, '->', destinationDirectory);
+        process.exit(0);
+    } catch (error) {
+        console.error('Postbuild failed:', error);
+        process.exit(2);
     }
-
-    // ensure destination exists
-    await fsp.mkdir(destDir, { recursive: true });
-
-    // remove any existing files under dest (but keep the dest folder)
-    await rimrafDir(destDir);
-
-    // copy dist -> dest
-    await copyDir(distDir, destDir);
-
-    // Also copy dist/models into dest/assets/models so files are available both at
-    // `/models/...` and `/assets/models/...` (some runtime bundles request the latter).
-    const distModels = path.join(distDir, 'models');
-    const destAssetsModels = path.join(destDir, 'assets', 'models');
-    if (fs.existsSync(distModels)) {
-      await fsp.mkdir(path.join(destDir, 'assets'), { recursive: true });
-      await copyDir(distModels, destAssetsModels);
-    }
-
-    console.log('postbuild: copied', distDir, '->', destDir);
-    process.exit(0);
-  } catch (err) {
-    console.error('postbuild failed:', err);
-    process.exit(2);
-  }
 })();
